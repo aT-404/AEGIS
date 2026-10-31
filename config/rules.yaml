@@ -1,0 +1,12 @@
+intrusion:
+  enabled: true
+  min_confidence: 0.4
+
+loitering:
+  enabled: true
+  threshold_seconds: 30
+  check_interval_frames: 30
+
+crowd:
+  enabled: true
+  max_count: 3

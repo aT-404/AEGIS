@@ -1,0 +1,24 @@
+zones:
+  - name: R-01
+    label: "Machinery Exclusion Zone"
+    polygon: [[120, 250], [480, 250], [480, 600], [120, 600]]
+    rules:
+      intrusion: true
+      loitering_threshold_seconds: 10
+      crowd_threshold: 1
+
+  - name: R-02
+    label: "High-Voltage Equipment Area"
+    polygon: [[310, 200], [640, 200], [640, 580], [310, 580]]
+    rules:
+      intrusion: true
+      loitering_threshold_seconds: 30
+      crowd_threshold: 2
+
+  - name: GATE-01
+    label: "Entrance Gate Monitoring"
+    polygon: [[550, 300], [850, 300], [850, 720], [550, 720]]
+    rules:
+      intrusion: false
+      loitering_threshold_seconds: 60
+      crowd_threshold: 5

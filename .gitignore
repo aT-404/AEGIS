@@ -1,0 +1,46 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+
+# Runtime outputs & models
+outputs/*.mp4
+data/models/*.pt
+data/models/*.onnx
+!data/models/.gitkeep
+
+# Alerts runtime artifacts
+alerts/frames/*.jpg
+!alerts/frames/.gitkeep
+alerts/ALERT-*.json
+!alerts/.gitkeep
+!outputs/.gitkeep
+
+# Sample videos (large binary assets generated via data/generate_samples.py)
+data/samples/*.mp4
+!data/samples/.gitkeep
+
+# Environment
+.env
+.DS_Store
+Thumbs.db
