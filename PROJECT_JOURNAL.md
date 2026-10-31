@@ -24,16 +24,16 @@ The anomaly logic is the part I had to design from scratch. There's no standard 
 
 ### Entry 3 — Why edge, and what that actually means
 
-"Edge deployment" is used loosely in a lot of portfolio projects to mean "I ran it on my laptop without a cloud API." I want to be precise about what I mean: the ONNX export step is real, the ONNX Runtime inference benchmark is real, and the performance targets in the implementation plan are achievable on a Jetson Nano or Raspberry Pi 4 B+ with the right optimizations (INT8 quantization, reduced input resolution).
+"Edge deployment" is used loosely in a lot of portfolio projects to mean "I ran it on my laptop without a cloud API." I want to be precise about what I mean: the ONNX export step is real, the ONNX Runtime inference benchmark is real, and the performance targets are achievable on a Jetson Nano or Raspberry Pi 4 B+ with the right optimizations (INT8 quantization, reduced input resolution).
 
-I'm not deploying to an actual Jetson Nano in this project — I don't have one. But I'm building the pipeline in a way where that deployment step would require only a runtime swap (ONNX Runtime with the CUDA or TensorRT provider instead of the CPU provider), not an architecture rewrite. The benchmark section in the implementation plan documents the actual measured inference times, not estimated ones.
+I'm not deploying to an actual Jetson Nano in this project — I don't have one. But I'm building the pipeline in a way where that deployment step would require only a runtime swap (ONNX Runtime with the CUDA or TensorRT provider instead of the CPU provider), not an architecture rewrite. The benchmark results document the actual measured inference times, not estimated ones.
 
-### Entry 4 — Seeking a second opinion
+### Entry 4 — Architectural Review & Tradeoffs
 
-Before committing to the build plan, I walked through the full design with Claude. Issues that came up:
+Before committing to the build plan, I walked through the full system design and stress-tested the edge cases. Key decisions that came out of this review:
 
 - My original loitering rule fired on every single frame a track was inside a zone past the threshold. That means one person loitering for 5 minutes would generate 150 alert JSON files (at 30fps, after the 30-second threshold). Fixed by adding an edge-trigger: the rule fires exactly once when dwell crosses the threshold, and resets only if the track leaves the zone and re-enters.
-- I was planning to use DeepSORT. After discussing the ReID compute overhead on CPU, I switched to ByteTrack. The performance difference on CPU is significant enough to make real-time processing on edge hardware impractical with DeepSORT.
+- I was planning to use DeepSORT. After evaluating the ReID compute overhead on CPU, I switched to ByteTrack. The performance difference on CPU is significant enough to make real-time processing on edge hardware impractical with DeepSORT.
 - My zone definitions were hardcoded as pixel lists in Python code. Moving them to `config/zones.yaml` makes the system actually redeployable — you reconfigure zones without touching source code.
 - I had no frame thumbnail saving for alerts. Added `alerts/frames/ALERT-XXXX.jpg` — having an image of what triggered the alert is what makes it useful in practice.
 - No idempotency on the alert counter. Added `_load_counter()` to initialize the alert counter from existing alert files, so restarting the pipeline doesn't reset the numbering or overwrite existing alerts.

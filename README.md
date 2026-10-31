@@ -8,7 +8,7 @@ Built for the operational gap that exists in industrial surveillance: hundreds o
 
 ## Key Features
 
-- **YOLOv8n Detection:** Uses the nano variant of YOLOv8 — 3.2M parameters, 8.7ms inference on CPU — tuned specifically for pedestrian and equipment detection in industrial footage. ONNX-exported for runtime portability.
+- **YOLOv8n Detection:** Uses the nano variant of YOLOv8 — 3.2M parameters, sub-35ms inference on CPU — tuned specifically for pedestrian and equipment detection in industrial footage. ONNX-exported for runtime portability.
 - **ByteTrack Multi-Object Tracking:** Maintains consistent object identities across frames using a motion-model-based association algorithm. Lighter than DeepSORT — no re-identification feature extraction — which makes it practical on CPU-only edge hardware.
 - **YAML-Configured ROI Zones:** Define restricted zones as polygons in `config/zones.yaml`. No code changes required to add, remove, or reshape zones — redeploy config, restart stream.
 - **Rules Engine (Three Anomaly Types):**
@@ -16,7 +16,7 @@ Built for the operational gap that exists in industrial surveillance: hundreds o
   - **Loitering:** A tracked object remains inside a zone for longer than a configurable dwell threshold (default: 30 seconds).
   - **Crowd Formation:** The count of simultaneous tracked objects inside a zone exceeds a configured limit.
 - **Structured Alert JSON:** Every triggered anomaly produces a fully typed alert record with timestamp, track ID, anomaly type, zone name, confidence, and the bounding box at the moment of trigger — ready to log or forward to a SIEM or operations dashboard.
-- **ONNX Runtime Inference:** YOLOv8n exported to ONNX and served via ONNX Runtime, achieving consistent sub-20ms per-frame inference on a standard laptop CPU. No CUDA dependency.
+- **ONNX Runtime Inference:** YOLOv8n exported to ONNX and served via ONNX Runtime, achieving consistent real-time frame rates on a standard CPU. No CUDA dependency.
 - **Streamlit Monitoring Dashboard:** Live frame display with bounding boxes and zone overlays, real-time alert log, per-zone occupancy counts, and historical alert statistics.
 
 ---
@@ -123,15 +123,16 @@ AEGIS/
 ├── LICENSE
 ├── requirements.txt
 ├── .env.example
-├── IMPLEMENTATION_PLAN.md
 ├── PROJECT_JOURNAL.md
+├── pytest.ini
 ├── config/
 │   ├── zones.yaml
 │   ├── rules.yaml
 │   └── tracker.yaml
 ├── data/
 │   ├── samples/           ← sample video clips for testing
-│   └── models/            ← YOLO weights + ONNX model
+│   ├── models/            ← YOLO weights + ONNX model
+│   └── generate_samples.py← synthetic scenario generation script
 ├── src/
 │   ├── ingestion/
 │   │   └── stream_reader.py
@@ -145,7 +146,8 @@ AEGIS/
 │   ├── alerts/
 │   │   └── alert_generator.py
 │   ├── optimization/
-│   │   └── model_export.py
+│   │   ├── model_export.py
+│   │   └── benchmark.py
 │   └── main.py
 ├── alerts/
 │   └── frames/            ← frame thumbnails at alert trigger
@@ -155,6 +157,7 @@ AEGIS/
 │   ├── architecture.md
 │   ├── detection-methodology.md
 │   ├── edge-optimization.md
+│   ├── scene-notes.md
 │   └── setup.md
 ├── tests/
 │   ├── test_zone_monitor.py
@@ -172,7 +175,8 @@ AEGIS/
 - [Architecture Guide](docs/architecture.md)
 - [Detection & Tracking Methodology](docs/detection-methodology.md)
 - [Edge Optimization Guide](docs/edge-optimization.md)
-- [Setup Guide](docs/setup.md)
+- [Setup & Calibration Guide](docs/setup.md)
+- [Scene Observations & Notes](docs/scene-notes.md)
 
 ---
 
