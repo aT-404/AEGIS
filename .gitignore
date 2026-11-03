@@ -45,6 +45,3 @@ data/samples/*.mp4
 .DS_Store
 Thumbs.db
 
-# Internal local planning files (never push to repo)
-IMPLEMENTATION_PLAN.md
-AEGIS_IMPLEMENTATION_PLAN.md

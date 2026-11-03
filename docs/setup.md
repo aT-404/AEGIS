@@ -8,7 +8,7 @@
 ## Installation
 
 ```bash
-git clone https://github.com/your-org/AEGIS.git
+git clone https://github.com/aT-404/AEGIS.git
 cd AEGIS
 pip install -r requirements.txt
 ```

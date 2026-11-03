@@ -23,7 +23,7 @@ Built for the operational gap that exists in industrial surveillance: hundreds o
 
 ## Architecture Diagram
 
-```
+```mermaid
 flowchart TD
     A["Video Source (RTSP Stream / MP4 File)"] --> B["Stream Reader (src/ingestion/stream_reader.py)"]
     B --> C["ONNX Runtime YOLO Detector (src/detection/yolo_detector.py)"]
@@ -124,6 +124,7 @@ AEGIS/
 ├── requirements.txt
 ├── .env.example
 ├── PROJECT_JOURNAL.md
+├── IMPLEMENTATION_PLAN.md
 ├── pytest.ini
 ├── config/
 │   ├── zones.yaml
@@ -172,6 +173,7 @@ AEGIS/
 
 ## Documentation
 
+- [Implementation Plan](IMPLEMENTATION_PLAN.md)
 - [Architecture Guide](docs/architecture.md)
 - [Detection & Tracking Methodology](docs/detection-methodology.md)
 - [Edge Optimization Guide](docs/edge-optimization.md)
