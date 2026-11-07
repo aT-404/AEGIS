@@ -1,11 +1,34 @@
 from collections import defaultdict
-from typing import List, Dict, Any, Set
+from typing import List, Dict, Any, Optional, Set
 
 
 class RulesEngine:
-    """Stateful anomaly detection engine for industrial surveillance."""
+    """Stateful anomaly detection engine for industrial surveillance.
 
-    def __init__(self, departure_grace_frames: int = 5, crowd_cooldown_seconds: float = 1.0):
+    Rule defaults can be overridden at construction time by passing a
+    ``rules_cfg`` dict loaded from ``config/rules.yaml``.  Keys that are
+    absent in the dict fall back to the built-in defaults shown below.
+
+    Example config/rules.yaml structure::
+
+        intrusion:
+          enabled: true
+          min_confidence: 0.4
+        loitering:
+          enabled: true
+          threshold_seconds: 30
+          check_interval_frames: 30
+        crowd:
+          enabled: true
+          max_count: 3
+    """
+
+    def __init__(
+        self,
+        departure_grace_frames: int = 5,
+        crowd_cooldown_seconds: float = 1.0,
+        rules_cfg: Optional[Dict[str, Any]] = None,
+    ):
         # dwell_start[track_id][zone_name] = timestamp in seconds of first entry
         self._dwell_start: Dict[str, Dict[str, float]] = defaultdict(dict)
         # intrusion_fired[track_id][zone_name] = bool
@@ -21,6 +44,22 @@ class RulesEngine:
 
         self.departure_grace_frames = departure_grace_frames
         self.crowd_cooldown_seconds = crowd_cooldown_seconds
+
+        # --- Rule configuration (from rules.yaml or built-in defaults) ---
+        cfg = rules_cfg or {}
+
+        intr = cfg.get("intrusion", {})
+        self.intrusion_enabled: bool = bool(intr.get("enabled", True))
+        self.intrusion_min_confidence: float = float(intr.get("min_confidence", 0.4))
+
+        loit = cfg.get("loitering", {})
+        self.loitering_enabled: bool = bool(loit.get("enabled", True))
+        self.loitering_threshold_seconds: float = float(loit.get("threshold_seconds", 30))
+        self.loitering_check_interval_frames: int = int(loit.get("check_interval_frames", 30))
+
+        crowd = cfg.get("crowd", {})
+        self.crowd_enabled: bool = bool(crowd.get("enabled", True))
+        self.crowd_max_count: int = int(crowd.get("max_count", 3))
 
     def evaluate(self, zone_hits: List[Dict[str, Any]], frame_idx: int, fps: float) -> List[Dict[str, Any]]:
         """
@@ -65,7 +104,12 @@ class RulesEngine:
             rules = hit.get("rules", {})
 
             # Rule 1 — Zone Intrusion
-            if rules.get("intrusion", False):
+            confidence = hit.get("confidence", 1.0)
+            if (
+                self.intrusion_enabled
+                and rules.get("intrusion", True)
+                and confidence >= self.intrusion_min_confidence
+            ):
                 if not self._intrusion_fired[track_id].get(zone_name, False):
                     self._intrusion_fired[track_id][zone_name] = True
                     triggered.append(
@@ -79,8 +123,8 @@ class RulesEngine:
             dwell = current_time - self._dwell_start[track_id][zone_name]
 
             # Rule 2 — Loitering
-            loiter_thresh = rules.get("loitering_threshold_seconds", 30)
-            if dwell >= loiter_thresh:
+            loiter_thresh = rules.get("loitering_threshold_seconds", self.loitering_threshold_seconds)
+            if self.loitering_enabled and dwell >= loiter_thresh:
                 # Trigger exactly once per loitering episode
                 if not self._loitering_fired[track_id].get(zone_name, False):
                     self._loitering_fired[track_id][zone_name] = True
@@ -95,10 +139,10 @@ class RulesEngine:
 
         # Rule 3 — Crowd Formation (evaluated per zone)
         for zone_name, hits in current_zone_hits.items():
-            if not hits:
+            if not hits or not self.crowd_enabled:
                 continue
             rules = hits[0].get("rules", {})
-            crowd_thresh = rules.get("crowd_threshold")
+            crowd_thresh = rules.get("crowd_threshold", self.crowd_max_count)
             if crowd_thresh is not None:
                 current_count = len(self._zone_occupancy[zone_name])
                 if current_count > crowd_thresh:

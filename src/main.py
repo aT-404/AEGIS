@@ -54,9 +54,14 @@ def run_pipeline(
             tracker_cfg = yaml.safe_load(f) or {}
     tracker = ObjectTracker(tracker_cfg)
 
+    rules_cfg = {}
+    if Path("config/rules.yaml").exists():
+        with open("config/rules.yaml", "r", encoding="utf-8") as f:
+            rules_cfg = yaml.safe_load(f) or {}
+
     zones = load_zones("config/zones.yaml")
     monitor = ZoneMonitor(zones)
-    rules = RulesEngine()
+    rules = RulesEngine(rules_cfg=rules_cfg)
     alert_gen = AlertGenerator(output_dir=output_dir, source=str(source))
 
     writer = None

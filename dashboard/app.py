@@ -171,9 +171,15 @@ with tab_live:
             detector = YOLODetector(model_path, conf_threshold=conf_thresh, iou_threshold=iou_thresh)
             tracker_cfg = {"track_thresh": conf_thresh, "track_buffer": 30, "match_thresh": 0.8}
             tracker = ObjectTracker(tracker_cfg)
+
+            rules_cfg = {}
+            if Path("config/rules.yaml").exists():
+                with open("config/rules.yaml", "r", encoding="utf-8") as f:
+                    rules_cfg = yaml.safe_load(f) or {}
+
             zones = load_zones("config/zones.yaml")
             monitor = ZoneMonitor(zones)
-            rules = RulesEngine()
+            rules = RulesEngine(rules_cfg=rules_cfg)
             alert_gen = AlertGenerator(output_dir="alerts/", source=str(video_source))
 
             frame_times = []
